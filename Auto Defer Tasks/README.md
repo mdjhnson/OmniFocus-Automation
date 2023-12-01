@@ -1,6 +1,6 @@
 
 # Auto Defer
-See the code [*of-autoDeferTasks.omnijs*](https://github.com/mdjhnson/OmiFocus-Automation/blob/main/of-autoDeferTasks.omnijs). This originally came from the [OmniGroup Forum](https://discourse.omnigroup.com/t/automating-my-daily-updating-of-defer-dates-and-times/69924/2).
+See the code [*of-autoDeferTasks.omnijs*](https://github.com/mdjhnson/OmiFocus-Automation/blob/main/Auto%20Defer%20Tasks/of-autoDeferTasks.omnijs). This originally came from the [OmniGroup Forum](https://discourse.omnigroup.com/t/automating-my-daily-updating-of-defer-dates-and-times/69924/2).
 
 ## Basic Instructions
 **You can specify a task for auto-defer in a few ways.**

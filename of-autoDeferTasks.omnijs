@@ -1,0 +1,132 @@
+// COPY & PASTE into editor app. EDIT & SAVE with “.omnifocusjs” file extension.
+/*{
+    "type": "action",
+    "targets": ["omnifocus"],
+    "author": "Matthew Johnson",
+    "identifier": "com.matthewjohnson",
+    "version": "1.0",
+    "description": "Defers tasks in the past if they have the tag 'auto-defer' and a default defer time in the notes (ie. 'Default Time: 07:00:00AM)",
+    "label": "Auto-Defer Tasks",
+    "shortLabel": "Auto-Defer Tasks",
+    "paletteLabel": "Auto-Defer Tasks",
+    "image": "clock.arrow.circlepath"
+}*/
+(() => {
+    const action = new PlugIn.Action(async function (selection, sender) {
+        try {
+            // selection options: tasks, projects, folders, tags, databaseObjects, allObjects
+
+            // tasks can be marked with a tag and/or a special character/string in the name. If desired, it is also possible to search the note for the same special character as the name.
+
+            var searchTag = true;                       // [ CAN UPDATE ] {Boolean} Search for tag
+            var searchName = true;                      // [ CAN UPDATE ] {Boolean} Search the task name
+            var searchNote = false;                     // [ CAN UPDATE ] {Boolean} Search the task note
+            var tagName = 'auto-defer';                 // [ CAN UPDATE ] {String} This is the tag that marks tasks for auto-deferment
+            var specialCharacter = '©';                 // [ CAN UPDATE ] {String} This is the string in the task name that marks tasks for auto-deferment
+            var defaultTimeString = 'Default Time: ';   // [ CAN UPDATE ] {String}
+            var onlyNextDay = false;                     // [ CAN UPDATE ] {Boolean} Should tasks be defered to the next day only if the day is over?
+            var catchUpOldTasks = true;                 // [ CAN UPDATE ] {Boolean} Should old tasks be caught up to present day (true) or bumped up one day at a time (false)?
+
+
+            var d = new Date(); (onlyNextDay ? d.setHours(0) : '');
+            var taskIds = new Array();
+            var toDefer = new Array();
+            var tgs = flattenedTags;
+            var tsks = flattenedTasks;
+            var bySpecialChar_inName = new Array();
+            var byString_inTag = new Array();
+            var bySpecialChar_inDesc = new Array();
+            
+            // GET TASKS BASED ON NAME SEARCH
+            if (searchName) bySpecialChar_inName = tsks.filter((tsk) => tsk.name.includes(specialCharacter));
+            console.log('Name: ' + bySpecialChar_inName);
+
+            // GET TASKS BASED ON TAG SEARCH
+            if (searchTag && tagName != '' && tagName != null) byString_inTag = flattenedTags.byName(tagName).tasks.filter(tsk => tsk.deferDate < d);
+            console.log('Tag: ' + JSON.stringify(byString_inTag.map(t=>t.name)));
+
+            // GETS TASKS BASED ON NOTE SEARCH
+            if (searchNote) bySpecialChar_inDesc = tsks.filter((tsk) => tsk.note.includes(specialCharacter));
+            console.log('Desc: ' + bySpecialChar_inDesc);
+
+            // COMBINES SEARCHES
+            searchResults = byString_inTag.concat(bySpecialChar_inName, bySpecialChar_inDesc);
+            console.log('Search Results Found: ' + searchResults.length);
+            
+            // Removes duplicate, dropped, and completed tasks
+            searchResults.forEach((tsk) => {
+                console.log('Task Defer Date: ' + tsk.deferDate);
+                console.log('d: ' + d);
+                if (!taskIds.includes(tsk.id.primaryKey) && tsk.deferDate < d && tsk.active && !tsk.completed) {
+                    taskIds.push(tsk.id.primaryKey);
+                    toDefer.push(tsk);
+                    return tsk;
+                }
+            })
+            console.log('To Defer: ' + JSON.stringify(toDefer.map(t=>t.name)));
+
+
+
+            var updatedTasks = toDefer.map((tsk) => {
+                var note = tsk.note;
+                var stringStart = note.indexOf(defaultTimeString) + defaultTimeString.length;
+                var stringEnd = note.indexOf("\n", stringStart);
+                var defaultTime = note.substring(stringStart, (stringEnd > 0 ? stringEnd : note.length));
+                // (?<=Default Time: )(.*)
+                // var defaulTime = note.match(/(?<=\defaultTimeString)(.*)
+
+                console.log('Default time found: ' + defaultTime);
+                var hms = defaultTime.replace(' ', '').split(':');
+                console.log(JSON.stringify(hms));
+                var h = hms[0].substring(hms[0].length - 2, hms[0].length);
+                console.log(`h: ${h}`);
+                var m = hms[1].substring(0, 2);
+                console.log(`m: ${m}`);
+                var s = hms.length > 2 ? hms[2].substring(0, 2) : '00';
+                console.log(`s: ${s}`);
+                defaultTime.toLowerCase().includes('pm') ? h = Number.parseInt(h) + 12 : '';
+                defaultTime.toLowerCase().includes('am') && h == 12 ? h = '00' : '';
+                h.length == 1 ? h = '0' + h : '';
+                m.length == 1 ? m = '0' + m : '';
+                var hms = `${h}:${m}:${s}`;
+                console.log('hms: ' + hms);
+
+                // var d = new Date()
+                // var deferDateDate = d.toLocaleString().split(",")[0]
+                // console.log(deferDateDate)
+                // var target = new Date(deferDateDate)
+                // console.log(target)
+
+                var deferDate = catchUpOldTasks ? d : tsk.deferDate;
+                var deferDateDateTime = deferDate.toLocaleString();
+                var deferDateDate = deferDateDateTime.split(',')[0];
+                var target = new Date(deferDateDate + ' ' + hms);
+                target.setDate(target.getDate() + 1);   
+
+
+
+                // var deferDateDateTime = deferDate.toISOString();
+                // var deferDateDate = deferDateDateTime.split('T')[0];
+                // var target = new Date(deferDateDate + 'T' + hms);
+
+                tsk.deferDate = target;
+
+                var results = { 'Task Name': tsk.name, 'Old Date': deferDate, 'New Date': tsk.deferDate };
+                return results;
+            });
+        }
+        catch (err) {
+            if (!err.causedByUserCancelling) {
+                console.error(err.name, err.message)
+                //new Alert(err.name, err.message).show()
+            }
+        }
+    });
+
+    action.validate = function (selection, sender) {
+        // selection options: tasks, projects, folders, tags, databaseObjects, allObjects
+        return true
+    };
+
+    return action;
+})();

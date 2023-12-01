@@ -1,0 +1,28 @@
+{
+    "defaultLocale": "en",
+    "identifier": "com.mattjohnson.omnifocus-plugin-work",
+    "author": "Matt Johnson",
+    "description": "A collection of Omni Automation scripts for OmniFocus that will help with work.",
+    "version": "3.0",
+    "actions": [{
+        "image": "icon.png",
+        "identifier": "aboutThisPlugin"
+    }, {
+        "image": "icon-followup.png",
+        "identifier": "createFollowupTask"
+    }, {
+        "image": "icon-focusonWork.png",
+        "identifier": "focusonWork"
+    }, {
+        "image": "icon-autoSortProjects.png",
+        "identifier": "autoSortProjects"
+    }, {
+        "identifier": "nexttoThisWeek"
+    }, {
+        "identifier": "sortdeferdate"
+    }, {
+        "image": "icon-findmissingna.png",
+        "identifier": "findmissingna"
+    }],
+    "libraries": []
+}

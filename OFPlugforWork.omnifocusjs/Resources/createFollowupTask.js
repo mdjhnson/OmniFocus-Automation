@@ -61,7 +61,7 @@
 		            if (clearDates == true) {
 		                folTask.deferDate = null
 		                folTask.dueDate = null
-                        if (app.userVersion >= 4.7) {
+                        if (Number(app.userVersion.versionString) >= 4.7) {
                             folTask.plannedDate = null
                         }
 		            }

@@ -1,0 +1,92 @@
+
+/*{
+	"type": "action",
+	"targets": ["omnifocus"],
+	"author": "Matt Johnson",
+	"identifier": "com.omni-automation.of.duplicate-project-to-new-folder",
+	"version": "1.2",
+	"description": "Creates a Contact Plan for a new Fundraising lead.",
+	"label": "Create Contact Plan",
+	"shortLabel": "Create Contact Plan",
+	"paletteLabel": "Create Contact Plan",
+	"image": "plus.rectangle.on.folder"
+}*/
+(() => {
+    const destFolderName = 'Contact Plans'
+    const templateFolderName = 'TEMPLATES'
+    const projectTemplateName = 'Contact <Name>'
+    const projectTemplate = folderNamed(templateFolderName).projectNamed(projectTemplateName)
+
+	const action = new PlugIn.Action(async function(selection, sender){
+		try {
+            items = selection.projects
+			textInputFieldName = new Form.Field.String(
+                "person-name",
+                "Full Name",
+                null
+            )
+            dateInput1 = new Form.Field.Date("dateTouch1", "1st Touch", null);
+            dateInput2 = new Form.Field.Date("dateTouch2", "2nd Touch", null);
+            dateInput3 = new Form.Field.Date("dateTouch3", "3rd Touch", null);
+            dateInput4 = new Form.Field.Date("dateTouch4", "4th Touch", null);
+            dateInput5 = new Form.Field.Date("dateTouch5", "5th Touch", null);
+            // numInputTask2 = new Form.Field.String("touchNum2", "Days Until Second Touch", null);
+            // numInputTask3 = new Form.Field.String("touchNum3", "Days Until Third Touch", null);
+            // numInputTask4 = new Form.Field.String("touchNum4", "Days Until Fourth Touch", null);
+            // numInputTask5 = new Form.Field.String("touchNum5", "Days Until Fifth Touch", null);
+            
+            /** 
+             * I want to switch from text (numbers) to dates. Then I want to make the
+             * option to repeat the form with all the information that I filled in except the
+             * name of the person.
+             * */ 
+            
+
+
+			inputForm = new Form();
+			inputForm.addField(textInputFieldName, 0)
+			inputForm.addField(dateInput1, 1)
+			inputForm.addField(dateInput2, 2)
+			inputForm.addField(dateInput3, 3)
+			inputForm.addField(dateInput4, 4)
+			inputForm.addField(dateInput5, 5)
+			// inputForm.addField(numInputTask2, 2)
+			// inputForm.addField(numInputTask3, 3)
+			// inputForm.addField(numInputTask4, 4)
+			// inputForm.addField(numInputTask5, 5)
+
+            inputForm.validate = function(formObject){
+                var inputText01 = formObject.values['person-name']
+                var inputText01Status = (!inputText01)?false:true
+                var validation = (inputText01Status) ? true:false
+                return validation
+            }   
+
+            formPrompt = "Enter Person to Create Contact Plan:"
+            buttonTitle = "Continue"
+            formObject = await inputForm.show(formPrompt,buttonTitle)
+    
+            personName = formObject.values['person-name']
+            shouldBeSequential = true
+
+            // Create new project and populate with tasks from template project
+            parentFolder = flattenedFolders.find(f=> f.name==destFolderName)
+            project = new Project(`Contact ${personName}`, parentFolder)
+            projectID = project.id.primaryKey
+			if(shouldBeSequential === true){project.sequential = true}
+            dupTasks = duplicateTasks(projectTemplate.tasks, project)
+            flattenedProjects.find(p => p.id.primaryKey == projectID).flattenedTasks.forEach(t => t.name = t.name.replace('<Name>', personName))
+            // dupTasks.flattenedTasks.forEach(t => t.name = t.name.replace('<Name>', personName))
+
+            URL.fromString(`omnifocus:///task/${projectID}`).open()
+		} catch(err){
+			console.error(err)
+		}
+    });
+
+    action.validate = function(selection, sender){
+		return true
+	};
+	
+	return action;
+})();
